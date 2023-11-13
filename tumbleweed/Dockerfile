@@ -1,59 +1,81 @@
-FROM  docker.io/library/debian:bullseye
-LABEL description="OpenWrt Builder for TP-Link TL-WR840N v6.x"
-LABEL dependency="https://github.com/IcedShake/openwrt-19.07-tl-wr840n-v6.x"
+FROM  registry.opensuse.org/opensuse/tumbleweed
+LABEL description="iLab OpenVPN Client"
 LABEL maintainer="Ellam ByDefault <ellam.bydefault@gmail.com>"
-ENV   \
-  SHELL=/bin/bash \
-  FORCE_UNSAFE_CONFIGURE=1
-COPY  .config /
+COPY  ct/*.sh conf/ /
+CMD   /entrypoint.sh
 RUN   \
   \
   `####################` \
   `# Install packages #` \
   `####################` \
   \
-  export DEBIAN_FRONTEND=noninteractive \
-  \
-  &&  apt update \
-  &&  apt upgrade -y \
-  &&  apt install -y \
-        build-essential \
-        libncurses-dev  \
-        python2 \
-        git     \
-        gawk    \
-        unzip   \
-        file    \
-        wget    \
+      zypper mr --disable repo-openh264 \
+  &&  `# zypper -n dup --no-allow-downgrade` \
+  &&  zypper -n in \
+        openvpn         \
+        openssh         \
         bash-completion \
-        less \
-        vim  \
+        less            \
+        vim             \
+        vim-data        \
+        jq              \
+        iproute2        \
+        iputils         \
+        bind-utils      \
+        iperf           \
+        nmap            \
+        mtr             \
+        httpie          \
+        netcat-openbsd  \
+        `# git`         \
+        `# ipmitool`    \
   \
-  &&  apt autopurge -y \
-  &&  apt clean \
-  &&  rm -rf /var/lib/apt/lists/* \
+  &&  zypper cc -a \
+  &&  rm -rf \
+        /var/log/zypp \
+        /var/log/zypper.log \
   \
-  `########################` \
-  `# Set main environment #` \
-  `########################` \
+  `######################` \
+  `# Set OpenVPN client #` \
+  `######################` \
   \
-  &&  cd /root \
-  &&  git clone https://github.com/IcedShake/openwrt-19.07-tl-wr840n-v6.x \
-  &&  cd openwrt-19.07-tl-wr840n-v6.x \
-  &&  ./scripts/feeds update  -a \
-  &&  ./scripts/feeds install -a \
-  &&  mv /.config . \
+  &&  chmod +x /*.sh \
+  &&  mv \
+        /up.sh        \
+        /down.sh      \
+        /*.ovpn       \
+        /*.conf       \
+        /etc/openvpn/ \
   \
-  `###############################` \
-  `# Set interactive environment #` \
-  `###############################` \
+  `##################` \
+  `# Set SSH server #` \
+  `##################` \
+  \
+  &&  ssh-keygen -A \
+  &&  mkdir /root/.ssh \
+  &&  curl -L -o /root/.ssh/authorized_keys \
+        https://github.com/geekobiloba.keys \
+  \
+  `############` \
+  `# Set govc #` \
+  `############` \
+  \
+  &&  curl -L -o - \
+        https://github.com/vmware/govmomi/releases/latest/download/govc_$(uname -s)_$(uname -m | sed 's,aarch64,arm64,').tar.gz \
+      | tar -C /root/bin -xvzf - govc \
+  &&  curl -L -o /etc/bash_completion.d/govc.sh \
+        https://raw.githubusercontent.com/vmware/govmomi/master/scripts/govc_bash_completion \
+  &&  mv /.govc /root/ \
+  &&  echo '. ~/.govc' >> /root/.bashrc \
+  \
+  `############` \
+  `# Set Bash #` \
+  `############` \
   \
   &&  echo 'set completion-ignore-case on' >> /etc/inputrc \
   \
   &&  echo                                    >> /root/.bashrc \
-  &&  echo '. /etc/bash_completion'           >> /root/.bashrc \
-  &&  echo                                    >> /root/.bashrc \
-  &&  echo "PS1='\e[1;31m[\u@\H:\w]\$\e[m '"  >> /root/.bashrc \
+  &&  echo '[ -d ~/bin ] && PATH=~/bin:$PATH' >> /root/.bashrc \
   &&  echo                                    >> /root/.bashrc \
   &&  echo 'alias   rm="rm   -i"'             >> /root/.bashrc \
   &&  echo 'alias   mv="mv   -i"'             >> /root/.bashrc \
