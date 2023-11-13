@@ -1,4 +1,4 @@
 #   Dockerfile templates
 
-Templates for interactive Docker/Podman containers.
+Collection of templates for interactive Docker/Podman containers.
 

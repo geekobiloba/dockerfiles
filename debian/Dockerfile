@@ -1,9 +1,7 @@
 FROM  docker.io/library/debian:bullseye
 LABEL description="OpenWrt Builder for TP-Link TL-WR840N v6.x"
-LABEL  dependency="https://github.com/IcedShake/openwrt-19.07-tl-wr840n-v6.x"
-LABEL  maintainer="Ellam ByDefault <ellam.bydefault@gmail.com>"
-ARG   \
-  DEBIAN_FRONTEND=noninteractive
+LABEL dependency="https://github.com/IcedShake/openwrt-19.07-tl-wr840n-v6.x"
+LABEL maintainer="Ellam ByDefault <ellam.bydefault@gmail.com>"
 ENV   \
   SHELL=/bin/bash \
   FORCE_UNSAFE_CONFIGURE=1
@@ -14,7 +12,9 @@ RUN   \
   `# Install packages #` \
   `####################` \
   \
-      apt update \
+  export DEBIAN_FRONTEND=noninteractive \
+  \
+  &&  apt update \
   &&  apt upgrade -y \
   &&  apt install -y \
         build-essential \
